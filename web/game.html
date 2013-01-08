@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html ng-app="GameOfLife">
+<head>
+    <title>Game of Angular</title>
+    <script src="lib/angular.min.js" type="text/javascript"></script>
+    <script src="js/game.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body ng-controller="MainCtrl">
+<button ng-click="start()">Start Game of Angular!</button><br/>
+
+<div class="board">
+    <div ng-repeat="x in rows" class="row">
+        <span ng-repeat="y in cols" class="cell" ng-class="alive(x.i, y.i)" ng-click="click(x.i, y.i)"></span>
+    </div>
+</div>
+</body>
+</html>
