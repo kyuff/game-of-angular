@@ -2,15 +2,33 @@ var GameOfLife = angular.module('GameOfLife', []);
 
 GameOfLife.controller("MainCtrl", MainCtrl);
 
-function MainCtrl($scope, $timeout, $log) {
+GameOfLife.service('WindowSize', function () {
+    var CELL_SIZE = 20;
+    return {
+        calcMaxCount: function calcMaxCount(available) {
+            var mod = available % CELL_SIZE;
+            if (mod === 1) {
+                available = available - 2;
+                mod = available % CELL_SIZE;
+            }
+            return (available - mod) / CELL_SIZE;
+        },
+        x: function () {
+            return $('#board').css('width').replace("px", "");
+        },
+        y: function () {
+            return $(window).height() - 50;
+        }
+
+    }
+});
+
+function MainCtrl($scope, $timeout, $log, WindowSize) {
 
     // public vars
-    $scope.minX = 0;
-    $scope.maxX = 15;
-    $scope.minY = 0;
-    $scope.maxY = 15;
     $scope.cells = {};
     $scope.count = 0;
+    $scope.running = false;
 
     var even = true;
 
@@ -27,11 +45,17 @@ function MainCtrl($scope, $timeout, $log) {
         return list;
     }
 
-
-    $scope.alive = function (x, y) {
-         return $scope.isAlive(x,y) ? 'alive' : '';
+    function recount() {
+        $scope.count = Object.keys($scope.cells).length;
     }
-    $scope.isAlive = function(x,y) {
+
+
+    $scope.cellStyle = function (x, y, last) {
+        var v = $scope.isAlive(x, y) ? 'alive' : '';
+        v += last ? " cell-last" : '';
+        return v;
+    }
+    $scope.isAlive = function (x, y) {
         return $scope.cells[key(x, y)] ? true : false;
     }
 
@@ -42,26 +66,30 @@ function MainCtrl($scope, $timeout, $log) {
         } else {
             $scope.cells[k] = { x: x, y: y};
         }
+        recount();
 
     }
 
+
     $scope.buildBoard = function () {
-        $scope.rows = buildRepeater($scope.minX, $scope.maxX);
-        $scope.cols = buildRepeater($scope.minY, $scope.maxY);
-        $scope.count = 0;
-        for( var c in $scope.cells ) {
-            $scope.count++;
-        }
+        var maxX = WindowSize.calcMaxCount(WindowSize.x());
+        var maxY = WindowSize.calcMaxCount(WindowSize.y());
+
+        $scope.rows = buildRepeater(0, maxY);
+        $scope.cols = buildRepeater(0, maxX);
     }
 
     $scope.tick = function (x, y) {
         $log.info(even ? "tick" : "tock");
-        even = !even;;
+        even = !even;
+        ;
         var board = {};
+
         function add(cell) {
-            var k = key(cell.x,cell.y);
+            var k = key(cell.x, cell.y);
             board[k] = cell;
         }
+
         for (var coord in $scope.cells) {
             var cell = $scope.cells[coord];
             var neighbours = $scope.neighbours(cell.x, cell.y);
@@ -73,24 +101,23 @@ function MainCtrl($scope, $timeout, $log) {
                 add(cell);
             }
             neighbours.forEach(function (neighbour) {
-                if( !$scope.isAlive( neighbour.x, neighbour.y ) ) {
+                if (!$scope.isAlive(neighbour.x, neighbour.y)) {
                     // don't look at alive cells, they'll be handled above
                     var neighbourList = $scope.neighbours(neighbour.x, neighbour.y);
                     var neighbourCount = $scope.aliveCount(neighbourList);
-                    if( neighbourCount === 3 ) {
+                    if (neighbourCount === 3) {
                         add(neighbour);
                     }
                 }
             });
         }
         $scope.cells = board;
-        $scope.buildBoard();
     };
 
     $scope.aliveCount = function (neighbours) {
         var c = 0;
         neighbours.forEach(function (neighbour) {
-            if( $scope.isAlive( neighbour.x, neighbour.y ) ) {
+            if ($scope.isAlive(neighbour.x, neighbour.y)) {
                 c++;
             }
         });
@@ -109,12 +136,21 @@ function MainCtrl($scope, $timeout, $log) {
         return list;
     };
 
-    $scope.start = function() {
-        $scope.tick();
-        $timeout(function() {
-                $scope.start();
-            }, 1000
-        )
+    $scope.start = function () {
+        $scope.running = true;
+        function run() {
+            if ($scope.running) {
+                $scope.tick();
+                $timeout(run, 1000);
+                recount();
+            }
+        }
+
+        run();
     }
+    $scope.stop = function () {
+        $scope.running = false;
+    }
+
     $scope.buildBoard();
 }

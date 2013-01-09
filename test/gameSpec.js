@@ -1,10 +1,15 @@
 
 describe('Game of Life Main Ctrl', function() {
     var scope;
+    var wSize = {
+        calcMaxCount : function(input) { return input; },
+        x : function() { return 10; },
+        y : function() { return 10; }
+    };
     beforeEach(module('GameOfLife'));
     beforeEach(inject(function($rootScope, $controller) {
         scope = $rootScope.$new;
-        $controller('MainCtrl', {$scope: scope});
+        $controller('MainCtrl', {$scope: scope, WindowSize: wSize});
     }));
 
     it('should do a correct tick with a row', function() {
@@ -61,18 +66,6 @@ describe('Game of Life Main Ctrl', function() {
         expect(neighbours.length).toBe(8);
     });
 
-    it('should create the correct amount of rows and cols', function() {
-        scope.minX = 0;
-        scope.maxX = 2;
-        scope.minY = 0;
-        scope.maxY = 3;
-        scope.buildBoard()
-
-
-        expect(scope.rows).toEqual( [ {i:0}, {i:1}]);
-        expect(scope.cols).toEqual( [ {i:0}, {i:1}, {i:2}]);
-
-    });
 
     it('should correctly add and remove a cell', function() {
         scope.click(5, 7);
@@ -89,8 +82,8 @@ describe('Game of Life Main Ctrl', function() {
 
     it('should know if a cell is alive', function() {
         scope.click(3,2);
-        expect(scope.alive(3,3)).toBe('');
-        expect(scope.alive(3,2)).toBe('alive');
+        expect(scope.isAlive(3,3)).toBeFalsy();
+        expect(scope.isAlive(3,2)).toBeTruthy();
     })
 
 });
