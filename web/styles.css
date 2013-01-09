@@ -30,6 +30,8 @@ html, body {
     border-left: 1px solid black;
     display: inline-block;
     margin: 0; padding: 0;
+    -webkit-transition: background ease-in 0.5s; /* Safari and Chrome */
+
 }
 .cell:hover {
     background-color: green;
